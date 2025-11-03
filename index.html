@@ -438,6 +438,9 @@
                 } else if (data.recordType === 'Medication') {
                     // For Medication, add pill icon
                     title = `💊 ${item.name || `Medication ${index + 1}`}`;
+                } else if (data.recordType === 'Allergy') {
+                    // For Allergy, add warning icon
+                    title = `⚠️ ${item.name || `Allergy ${index + 1}`}`;
                 } else {
                     // For other types, use reason, name, or default
                     title = item.reason || item.name || `Record ${index + 1}`;
