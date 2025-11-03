@@ -126,6 +126,31 @@
             font-weight: 600;
         }
 
+        .file-link-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #4C96D7 0%, #5A8FEC 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .file-link-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 150, 215, 0.4);
+        }
+
+        .file-link-button::before {
+            content: '📎';
+            font-size: 16px;
+        }
+
         .status-active {
             background: #d4edda;
             color: #155724;
@@ -414,6 +439,13 @@
                         html += `<span>${meta}</span>`;
                     });
                     html += '</div>';
+                }
+                
+                // Add file link if available
+                if (item.fileUrl && item.fileUrl.trim() !== '') {
+                    html += `<a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" class="file-link-button">
+                        View Attached File
+                    </a>`;
                 }
                 
                 html += '</div>';
