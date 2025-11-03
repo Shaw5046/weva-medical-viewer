@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Record Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4C96D7 0%, #5A8FEC 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header-icon {
+            font-size: 28px;
+        }
+
+        .patient-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .patient-info p {
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .record-type {
+            display: inline-block;
+            background: #4C96D7;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .record-item {
+            background: #f8f9fa;
+            border-left: 4px solid #4C96D7;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .record-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-item h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .record-item p {
+            color: #666;
+            font-size: 14px;
+            margin: 4px 0;
+            line-height: 1.5;
+        }
+
+        .record-item .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .record-item .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            color: #6c757d;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .warning-banner {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .warning-banner p {
+            color: #856404;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 60px 24px;
+        }
+
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .error-container h2 {
+            color: #dc3545;
+            margin-bottom: 12px;
+        }
+
+        .error-container p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 24px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4C96D7;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 24px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+            }
+            
+            .warning-banner {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="header-icon">📋</span>
+                Medical Record
+            </h1>
+            <div id="patient-info" class="patient-info"></div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading medical records...</p>
+        </div>
+        
+        <div id="content" class="content" style="display: none;">
+            <div class="warning-banner">
+                <p>⚠️ This is a temporary share for viewing only. Data is not stored on any server.</p>
+            </div>
+            <span id="record-type" class="record-type"></span>
+            <div id="records"></div>
+        </div>
+        
+        <div id="error" class="error-container" style="display: none;">
+            <div class="error-icon">❌</div>
+            <h2>Unable to Load Records</h2>
+            <p id="error-message"></p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                This medical record was securely shared via QR code.<br>
+                🔒 No data is stored on servers. All information is embedded in the link.
+            </p>
+        </div>
+    </div>
+
+    <!-- Use pako library for decompression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    
+    <script>
+        // Utility function to decode base64url
+        function base64UrlDecode(str) {
+            // Convert base64url to base64
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            // Add padding if needed
+            while (str.length % 4) {
+                str += '=';
+            }
+            return atob(str);
+        }
+
+        // Decode and decompress data from URL
+        function decodeData() {
+            try {
+                // Get hash from URL (everything after #)
+                const hash = window.location.hash.substring(1);
+                
+                if (!hash) {
+                    throw new Error('No data found in URL. Please scan the QR code again.');
+                }
+
+                // Extract parameters
+                const params = new URLSearchParams(hash.split('?')[1]);
+                const encodedData = params.get('d');
+                
+                if (!encodedData) {
+                    throw new Error('Invalid URL format. Missing data parameter.');
+                }
+
+                console.log('Encoded data length:', encodedData.length);
+
+                // Base64 URL decode
+                const compressedString = base64UrlDecode(encodedData);
+                
+                // Convert string to Uint8Array
+                const compressedArray = new Uint8Array(compressedString.length);
+                for (let i = 0; i < compressedString.length; i++) {
+                    compressedArray[i] = compressedString.charCodeAt(i);
+                }
+
+                // Decompress using pako
+                const decompressed = pako.ungzip(compressedArray, { to: 'string' });
+                
+                console.log('Decompressed data length:', decompressed.length);
+
+                // Parse JSON
+                const data = JSON.parse(decompressed);
+                
+                console.log('Parsed data:', data);
+                
+                return data;
+            } catch (e) {
+                console.error('Decode error:', e);
+                throw new Error(`Failed to decode data: ${e.message}`);
+            }
+        }
+
+        // Format date string
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        // Render patient information
+        function renderPatientInfo(data) {
+            const patientInfoDiv = document.getElementById('patient-info');
+            
+            let html = `<p><strong>${data.patientName || 'Anonymous'}</strong></p>`;
+            
+            if (data.age) {
+                html += `<p>Age: ${data.age}</p>`;
+            }
+            
+            if (data.sharedAt) {
+                html += `<p>Shared: ${formatDate(data.sharedAt)}</p>`;
+            }
+            
+            patientInfoDiv.innerHTML = html;
+        }
+
+        // Render records
+        function renderRecords(data) {
+            const recordsDiv = document.getElementById('records');
+            const recordTypeSpan = document.getElementById('record-type');
+            
+            recordTypeSpan.textContent = data.recordType || 'Medical Records';
+            
+            if (!data.items || data.items.length === 0) {
+                recordsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No records to display</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            
+            data.items.forEach((item, index) => {
+                html += '<div class="record-item">';
+                html += `<h3>${item.name || `Record ${index + 1}`}</h3>`;
+                
+                if (item.subtitle) {
+                    html += `<p>${item.subtitle}</p>`;
+                }
+                
+                if (item.details) {
+                    html += `<p>${item.details}</p>`;
+                }
+                
+                // Meta information
+                const metaItems = [];
+                
+                if (item.date) {
+                    metaItems.push(`📅 ${formatDate(item.date)}`);
+                }
+                
+                if (item.status) {
+                    const statusClass = item.status.toLowerCase() === 'active' ? 'status-active' : 'status-inactive';
+                    metaItems.push(`<span class="status-badge ${statusClass}">${item.status}</span>`);
+                }
+                
+                if (item.category) {
+                    metaItems.push(`🏷️ ${item.category}`);
+                }
+                
+                if (metaItems.length > 0) {
+                    html += '<div class="meta">';
+                    metaItems.forEach(meta => {
+                        html += `<span>${meta}</span>`;
+                    });
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            });
+            
+            recordsDiv.innerHTML = html;
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        // Main initialization
+        window.addEventListener('load', () => {
+            try {
+                // Decode data from URL
+                const data = decodeData();
+                
+                // Validate data structure
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Invalid data format');
+                }
+                
+                if (!data.items || !Array.isArray(data.items)) {
+                    throw new Error('No records found in shared data');
+                }
+                
+                // Render patient info
+                renderPatientInfo(data);
+                
+                // Render records
+                renderRecords(data);
+                
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (e) {
+                console.error('Error:', e);
+                showError(e.message || 'An unexpected error occurred');
+            }
+        });
+    </script>
+</body>
+</html>
+
