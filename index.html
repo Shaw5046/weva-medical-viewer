@@ -409,14 +409,27 @@
             
             data.items.forEach((item, index) => {
                 console.log(`Rendering item ${index}:`, item);
+                console.log(`Item has readings:`, item.readings ? 'YES' : 'NO');
+                console.log(`Data recordType:`, data.recordType);
+                
                 html += '<div class="record-item">';
                 
-                // Title: use 'reason' for Medical Note Detail, otherwise use 'name'
-                const title = item.reason || item.name || `Record ${index + 1}`;
+                // Determine title based on record type and available fields
+                let title;
+                if (data.recordType === 'Biometric Update History' && item.date) {
+                    // For Biometric Update History, use date as title
+                    title = `📅 ${item.date}`;
+                    if (item.totalReadings) {
+                        title += ` (${item.totalReadings} readings)`;
+                    }
+                } else {
+                    // For other types, use reason, name, or default
+                    title = item.reason || item.name || `Record ${index + 1}`;
+                }
                 html += `<h3>${title}</h3>`;
                 
-                // Show author and date for Medical Note Detail
-                if (item.author) {
+                // Show author for Medical Note Detail
+                if (item.author && data.recordType !== 'Biometric Update History') {
                     html += `<p style="color: #6c757d; font-size: 14px;">👨‍⚕️ <strong>Author:</strong> ${item.author}</p>`;
                 }
                 
@@ -428,10 +441,10 @@
                     html += `<p>${item.details}</p>`;
                 }
                 
-                // Meta information
+                // Meta information (skip for Biometric Update History as it's shown in title)
                 const metaItems = [];
                 
-                if (item.date) {
+                if (item.date && data.recordType !== 'Biometric Update History') {
                     metaItems.push(`📅 ${formatDate(item.date)}`);
                 }
                 
@@ -452,14 +465,57 @@
                     html += '</div>';
                 }
                 
-                // Add clinical notes if available (for Medical Note Detail)
+                // ============================================
+                // Biometric Update History - Render readings FIRST
+                // ============================================
+                if (data.recordType === 'Biometric Update History' && item.readings && item.readings.length > 0) {
+                    console.log('✅ Rendering biometric readings:', item.readings);
+                    html += '<div style="margin-top: 12px;">';
+                    html += '<strong style="color: #495057; font-size: 16px;">❤️ Biometric Readings:</strong>';
+                    html += '<div style="margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">';
+                    
+                    item.readings.forEach(reading => {
+                        const iconMap = {
+                            'TEMPERATURE': '🌡️',
+                            'BLOOD_PRESSURE': '💉',
+                            'PULSE': '💓',
+                            'RESPIRATION_RATE': '🫁',
+                            'SPO2': '🩸',
+                            'WEIGHT': '⚖️',
+                            'HEIGHT': '📏',
+                            'BMI': '📊',
+                        };
+                        const icon = iconMap[reading.type] || '❤️';
+                        
+                        html += '<div style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white; text-align: center; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">';
+                        html += `<div style="font-size: 24px; margin-bottom: 6px;">${icon}</div>`;
+                        html += `<div style="font-size: 10px; opacity: 0.9; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${reading.displayName}</div>`;
+                        html += `<div style="font-size: 18px; font-weight: bold;">${reading.value}</div>`;
+                        html += '</div>';
+                    });
+                    
+                    html += '</div>';
+                    
+                    // Add recorded by if available
+                    if (item.recordedBy) {
+                        html += `<div style="margin-top: 12px; padding: 8px; background: #f0f0f0; border-left: 3px solid #667eea; border-radius: 4px; font-size: 13px; color: #495057;">📝 <strong>Recorded by:</strong> ${item.recordedBy}</div>`;
+                    }
+                    
+                    html += '</div>';
+                } else if (data.recordType === 'Biometric Update History') {
+                    console.log('⚠️ No biometric readings found or empty. Item:', item);
+                }
+                
+                // ============================================
+                // Medical Note Detail - Clinical Notes
+                // ============================================
                 if (item.clinicalNotes && item.clinicalNotes.trim() !== '') {
                     console.log('Rendering clinical notes for item:', item.clinicalNotes);
                     html += '<div style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px;">';
                     html += '<strong style="color: #495057;">📝 Clinical Notes:</strong>';
                     html += `<p style="margin-top: 8px; color: #6c757d; line-height: 1.6;">${item.clinicalNotes}</p>`;
                     html += '</div>';
-                } else {
+                } else if (data.recordType === 'Medical Note Detail') {
                     console.log('No clinical notes found or empty');
                 }
 
@@ -523,44 +579,7 @@
                     console.log('No medical imaging found');
                 }
 
-                // Add biometric readings if available (for Biometric Update History)
-                if (item.readings && item.readings.length > 0) {
-                    console.log('Rendering biometric readings:', item.readings);
-                    html += '<div style="margin-top: 12px;">';
-                    html += '<strong style="color: #495057;">❤️ Biometric Readings:</strong>';
-                    html += '<div style="margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;">';
-                    
-                    item.readings.forEach(reading => {
-                        const iconMap = {
-                            'TEMPERATURE': '🌡️',
-                            'BLOOD_PRESSURE': '💉',
-                            'PULSE': '💓',
-                            'RESPIRATION_RATE': '🫁',
-                            'SPO2': '🩸',
-                            'WEIGHT': '⚖️',
-                            'HEIGHT': '📏',
-                            'BMI': '📊',
-                        };
-                        const icon = iconMap[reading.type] || '❤️';
-                        
-                        html += '<div style="padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">';
-                        html += `<div style="font-size: 20px; margin-bottom: 4px;">${icon}</div>`;
-                        html += `<div style="font-size: 11px; opacity: 0.9; margin-bottom: 2px;">${reading.displayName}</div>`;
-                        html += `<div style="font-size: 16px; font-weight: bold;">${reading.value}</div>`;
-                        html += '</div>';
-                    });
-                    
-                    html += '</div>';
-                    
-                    // Add recorded by if available
-                    if (item.recordedBy) {
-                        html += `<div style="margin-top: 8px; font-size: 12px; color: #6c757d; font-style: italic;">📝 Recorded by: ${item.recordedBy}</div>`;
-                    }
-                    
-                    html += '</div>';
-                }
-
-                // Add file link if available
+                // Add file link if available (for documents/uploads)
                 if (item.fileUrl && item.fileUrl.trim() !== '') {
                     html += `<a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" class="file-link-button">
                         View Attached File
