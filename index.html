@@ -441,6 +441,60 @@
                     html += '</div>';
                 }
                 
+                // Add clinical notes if available (for Medical Note Detail)
+                if (item.clinicalNotes && item.clinicalNotes.trim() !== '') {
+                    html += '<div style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px;">';
+                    html += '<strong style="color: #495057;">Clinical Notes:</strong>';
+                    html += `<p style="margin-top: 8px; color: #6c757d; line-height: 1.6;">${item.clinicalNotes}</p>`;
+                    html += '</div>';
+                }
+
+                // Add pathology tests if available
+                if (item.pathologyTests && item.pathologyTests.length > 0) {
+                    html += '<div style="margin-top: 12px; padding: 12px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">';
+                    html += '<strong style="color: #856404;">🧪 Pathology Tests:</strong>';
+                    item.pathologyTests.forEach(test => {
+                        html += '<div style="margin-top: 8px; padding: 8px; background: white; border-radius: 6px;">';
+                        if (test.lab) html += `<div style="font-size: 13px; color: #495057;"><strong>Lab:</strong> ${test.lab}</div>`;
+                        if (test.testDate) html += `<div style="font-size: 13px; color: #495057;"><strong>Test Date:</strong> ${test.testDate}</div>`;
+                        if (test.asap) html += '<span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: #dc3545; color: white; border-radius: 4px; font-size: 11px; font-weight: bold;">ASAP</span>';
+                        if (test.reason) html += `<div style="font-size: 13px; color: #6c757d; margin-top: 4px;">${test.reason}</div>`;
+                        if (test.tests && test.tests.length > 0) {
+                            html += '<div style="margin-top: 6px;"><strong style="font-size: 12px;">Tests:</strong><ul style="margin: 4px 0 0 20px; font-size: 13px; color: #495057;">';
+                            test.tests.forEach(t => {
+                                html += `<li>${t}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        const statusColor = test.resultsAvailable ? '#28a745' : '#ffc107';
+                        const statusText = test.resultsAvailable ? '✓ Results Available' : '⏳ Results Pending';
+                        html += `<div style="margin-top: 6px; font-size: 12px; color: ${statusColor}; font-style: italic;">${statusText}</div>`;
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                // Add medical imaging if available
+                if (item.medicalImaging && item.medicalImaging.length > 0) {
+                    html += '<div style="margin-top: 12px; padding: 12px; background: #d1ecf1; border-radius: 8px; border-left: 4px solid #17a2b8;">';
+                    html += '<strong style="color: #0c5460;">🩻 Medical Imaging:</strong>';
+                    item.medicalImaging.forEach(imaging => {
+                        html += '<div style="margin-top: 8px; padding: 8px; background: white; border-radius: 6px;">';
+                        if (imaging.testDate) html += `<div style="font-size: 13px; color: #495057;"><strong>📅 Date:</strong> ${imaging.testDate}</div>`;
+                        if (imaging.asap) html += '<span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: #dc3545; color: white; border-radius: 4px; font-size: 11px; font-weight: bold;">ASAP</span>';
+                        if (imaging.reason) html += `<div style="font-size: 13px; color: #6c757d; margin-top: 4px;"><strong>Reason:</strong> ${imaging.reason}</div>`;
+                        if (imaging.imagingItems && imaging.imagingItems.length > 0) {
+                            html += '<div style="margin-top: 6px;"><strong style="font-size: 12px;">Imaging Items:</strong><ul style="margin: 4px 0 0 20px; font-size: 13px; color: #495057;">';
+                            imaging.imagingItems.forEach(item => {
+                                html += `<li>${item}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+
                 // Add file link if available
                 if (item.fileUrl && item.fileUrl.trim() !== '') {
                     html += `<a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" class="file-link-button">
