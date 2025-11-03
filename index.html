@@ -345,7 +345,20 @@
                 // Parse JSON
                 const data = JSON.parse(decompressed);
                 
-                console.log('Parsed data:', data);
+                console.log('========== PARSED DATA START ==========');
+                console.log('Full parsed data:', data);
+                console.log('recordType:', data.recordType);
+                console.log('items count:', data.items ? data.items.length : 0);
+                if (data.items && data.items.length > 0) {
+                    console.log('First item:', data.items[0]);
+                    console.log('First item keys:', Object.keys(data.items[0]));
+                    console.log('First item has readings?', data.items[0].readings ? 'YES' : 'NO');
+                    if (data.items[0].readings) {
+                        console.log('Readings array:', data.items[0].readings);
+                        console.log('Readings length:', data.items[0].readings.length);
+                    }
+                }
+                console.log('========== PARSED DATA END ==========');
                 
                 return data;
             } catch (e) {
@@ -422,6 +435,9 @@
                     if (item.totalReadings) {
                         title += ` (${item.totalReadings} readings)`;
                     }
+                } else if (data.recordType === 'Medication') {
+                    // For Medication, add pill icon
+                    title = `💊 ${item.name || `Medication ${index + 1}`}`;
                 } else {
                     // For other types, use reason, name, or default
                     title = item.reason || item.name || `Record ${index + 1}`;
