@@ -523,6 +523,43 @@
                     console.log('No medical imaging found');
                 }
 
+                // Add biometric readings if available (for Biometric Update History)
+                if (item.readings && item.readings.length > 0) {
+                    console.log('Rendering biometric readings:', item.readings);
+                    html += '<div style="margin-top: 12px;">';
+                    html += '<strong style="color: #495057;">❤️ Biometric Readings:</strong>';
+                    html += '<div style="margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;">';
+                    
+                    item.readings.forEach(reading => {
+                        const iconMap = {
+                            'TEMPERATURE': '🌡️',
+                            'BLOOD_PRESSURE': '💉',
+                            'PULSE': '💓',
+                            'RESPIRATION_RATE': '🫁',
+                            'SPO2': '🩸',
+                            'WEIGHT': '⚖️',
+                            'HEIGHT': '📏',
+                            'BMI': '📊',
+                        };
+                        const icon = iconMap[reading.type] || '❤️';
+                        
+                        html += '<div style="padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">';
+                        html += `<div style="font-size: 20px; margin-bottom: 4px;">${icon}</div>`;
+                        html += `<div style="font-size: 11px; opacity: 0.9; margin-bottom: 2px;">${reading.displayName}</div>`;
+                        html += `<div style="font-size: 16px; font-weight: bold;">${reading.value}</div>`;
+                        html += '</div>';
+                    });
+                    
+                    html += '</div>';
+                    
+                    // Add recorded by if available
+                    if (item.recordedBy) {
+                        html += `<div style="margin-top: 8px; font-size: 12px; color: #6c757d; font-style: italic;">📝 Recorded by: ${item.recordedBy}</div>`;
+                    }
+                    
+                    html += '</div>';
+                }
+
                 // Add file link if available
                 if (item.fileUrl && item.fileUrl.trim() !== '') {
                     html += `<a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" class="file-link-button">
