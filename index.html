@@ -393,6 +393,8 @@
             
             recordTypeSpan.textContent = data.recordType || 'Medical Records';
             
+            console.log('renderRecords called with data:', data);
+            
             if (!data.items || data.items.length === 0) {
                 recordsDiv.innerHTML = `
                     <div class="empty-state">
@@ -406,8 +408,17 @@
             let html = '';
             
             data.items.forEach((item, index) => {
+                console.log(`Rendering item ${index}:`, item);
                 html += '<div class="record-item">';
-                html += `<h3>${item.name || `Record ${index + 1}`}</h3>`;
+                
+                // Title: use 'reason' for Medical Note Detail, otherwise use 'name'
+                const title = item.reason || item.name || `Record ${index + 1}`;
+                html += `<h3>${title}</h3>`;
+                
+                // Show author and date for Medical Note Detail
+                if (item.author) {
+                    html += `<p style="color: #6c757d; font-size: 14px;">👨‍⚕️ <strong>Author:</strong> ${item.author}</p>`;
+                }
                 
                 if (item.subtitle) {
                     html += `<p>${item.subtitle}</p>`;
@@ -443,10 +454,13 @@
                 
                 // Add clinical notes if available (for Medical Note Detail)
                 if (item.clinicalNotes && item.clinicalNotes.trim() !== '') {
+                    console.log('Rendering clinical notes for item:', item.clinicalNotes);
                     html += '<div style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px;">';
-                    html += '<strong style="color: #495057;">Clinical Notes:</strong>';
+                    html += '<strong style="color: #495057;">📝 Clinical Notes:</strong>';
                     html += `<p style="margin-top: 8px; color: #6c757d; line-height: 1.6;">${item.clinicalNotes}</p>`;
                     html += '</div>';
+                } else {
+                    console.log('No clinical notes found or empty');
                 }
 
                 // Add pathology tests if available
@@ -474,8 +488,16 @@
                     html += '</div>';
                 }
 
+                // Add pathology tests debug
+                if (item.pathologyTests) {
+                    console.log('Pathology tests found:', item.pathologyTests);
+                } else {
+                    console.log('No pathology tests');
+                }
+
                 // Add medical imaging if available
                 if (item.medicalImaging && item.medicalImaging.length > 0) {
+                    console.log('Medical imaging found:', item.medicalImaging);
                     html += '<div style="margin-top: 12px; padding: 12px; background: #d1ecf1; border-radius: 8px; border-left: 4px solid #17a2b8;">';
                     html += '<strong style="color: #0c5460;">🩻 Medical Imaging:</strong>';
                     item.medicalImaging.forEach(imaging => {
@@ -486,13 +508,19 @@
                         if (imaging.imagingItems && imaging.imagingItems.length > 0) {
                             html += '<div style="margin-top: 6px;"><strong style="font-size: 12px;">Imaging Items:</strong><ul style="margin: 4px 0 0 20px; font-size: 13px; color: #495057;">';
                             imaging.imagingItems.forEach(item => {
-                                html += `<li>${item}</li>`;
+                                html += `<li>${item} 📄</li>`;
                             });
                             html += '</ul></div>';
                         }
+                        // Note about PDF receipts
+                        html += '<div style="margin-top: 8px; padding: 6px; background: #f0f8ff; border-left: 3px solid #007bff; font-size: 12px; color: #004085;">';
+                        html += '📄 <em>Note: PDF receipts are available in the patient\'s medical system</em>';
+                        html += '</div>';
                         html += '</div>';
                     });
                     html += '</div>';
+                } else {
+                    console.log('No medical imaging found');
                 }
 
                 // Add file link if available
