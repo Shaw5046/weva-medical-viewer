@@ -273,7 +273,7 @@
         
         <div id="content" class="content" style="display: none;">
             <div class="warning-banner">
-                <p>⚠️ This is a temporary share for viewing only. Data is not stored on any server.</p>
+                <p>⚠️ This is a temporary 24-hour share for viewing only. Data is not stored on any server and will expire after 24 hours.</p>
             </div>
             <span id="record-type" class="record-type"></span>
             <div id="records"></div>
@@ -287,8 +287,9 @@
         
         <div class="footer">
             <p>
-                This medical record was securely shared via QR code.<br>
-                🔒 No data is stored on servers. All information is embedded in the link.
+                This medical record was securely shared via QR code or link.<br>
+                🔒 No data is stored on servers. All information is embedded in the link.<br>
+                ⏰ This link is valid for 24 hours from creation.
             </p>
         </div>
     </div>
@@ -360,6 +361,20 @@
                 }
                 console.log('========== PARSED DATA END ==========');
                 
+                // Check if link has expired (24-hour validity)
+                if (data.expiresAt) {
+                    const expiryDate = new Date(data.expiresAt);
+                    const now = new Date();
+                    
+                    console.log('Current time:', now.toISOString());
+                    console.log('Expiry time:', data.expiresAt);
+                    console.log('Is expired:', now > expiryDate);
+                    
+                    if (now > expiryDate) {
+                        throw new Error('This medical record share link has expired. Please request a new link from the patient.');
+                    }
+                }
+                
                 return data;
             } catch (e) {
                 console.error('Decode error:', e);
@@ -394,6 +409,19 @@
             
             if (data.sharedAt) {
                 html += `<p>Shared: ${formatDate(data.sharedAt)}</p>`;
+            }
+            
+            if (data.expiresAt) {
+                const expiryDate = new Date(data.expiresAt);
+                const now = new Date();
+                const hoursLeft = Math.max(0, Math.round((expiryDate - now) / (1000 * 60 * 60)));
+                
+                html += `<p style="color: ${hoursLeft < 6 ? '#d32f2f' : '#f57c00'}; font-weight: 600;">`;
+                html += `⏰ Expires: ${formatDate(data.expiresAt)}`;
+                if (hoursLeft > 0) {
+                    html += ` (${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''} left)`;
+                }
+                html += '</p>';
             }
             
             patientInfoDiv.innerHTML = html;
